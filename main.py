@@ -13,7 +13,7 @@ def main():
     video_folder = "G:\\Python\\PROJEKT\\VIDEOS"
     clips_folder = "G:\\Python\\PROJEKT\\CLIPS"
     output_folder = r"G:\Python\PROJEKT\OUTPUT"
-    download_videos_from_file(file_path, video_folder)
+    #download_videos_from_file(file_path, video_folder)
 
     # Get BPM for each song in the SONGS folder
     songs_folder = "G:\\Python\\PROJEKT\\SONGS"
@@ -31,8 +31,8 @@ def main():
 
             export_clips(bpm, video_folder, song_duration)
             make_music_video(song_path, clips_folder, output_folder)
-
-    time.sleep(1)
+            time.sleep(2)
+            delete_clips(clips_folder)
 
 if __name__ == "__main__":
     main()

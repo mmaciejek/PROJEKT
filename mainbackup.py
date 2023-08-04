@@ -1,6 +1,6 @@
 import os
 import random
-import moviepy.editor as mp
+from moviepy.editor import VideoFileClip, concatenate_videoclips, AudioFileClip
 
 def get_unique_filename(output_folder, base_filename):
     base_name, ext = os.path.splitext(base_filename)
@@ -11,51 +11,40 @@ def get_unique_filename(output_folder, base_filename):
     return f"{unique_filename}{num}.mp4"
 
 def make_music_video(song_file, clips_folder, output_folder):
-    # Check if the song file exists
-    if not os.path.exists(song_file):
-        print(f"Song file '{song_file}' does not exist.")
-        return
+    video_files = os.listdir(clips_folder)
+    random.shuffle(video_files)
 
-    # Check if the clips folder exists
-    if not os.path.exists(clips_folder):
-        print(f"Clips folder '{clips_folder}' does not exist.")
-        return
+    clips = []
+    for video_file in video_files:
+        video_path = os.path.join(clips_folder, video_file)
+        clip = VideoFileClip(video_path)
+        clips.append(clip)
 
-    # Check if the output folder exists, if not, create it
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    # Concatenate all the clips to create the final video
+    final_clip = concatenate_videoclips(clips, method="compose")
 
-    # Load the song file
-    audio_clip = mp.AudioFileClip(song_file)
+    # Load the background music
+    background_music = AudioFileClip(song_file)
 
-    # Get a list of all the video clips in the clips folder
-    clip_files = [os.path.join(clips_folder, clip_file) for clip_file in os.listdir(clips_folder) if
-                  clip_file.endswith('.mp4')]
+    # Set the audio of the final video with the background music
+    final_clip = final_clip.set_audio(background_music)
 
-    # Shuffle the list of clips to play them in random order
-    random.shuffle(clip_files)
+    # Create the output folder if it doesn't exist
+    os.makedirs(output_folder, exist_ok=True)
 
-    # Create a VideoFileClip object for each clip
-    clips = [mp.VideoFileClip(clip_file) for clip_file in clip_files]
+    # Get a unique filename for the output video
+    base_filename = os.path.basename(song_file)
+    output_file = get_unique_filename(output_folder, base_filename)
 
-    # Concatenate all the clips together
-    final_clip = mp.concatenate_videoclips(clips, method="compose")
+    # Save the final video with the unique filename and the audio merged
+    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac")
 
-    # Set the audio of the final clip to be the song audio
-    final_clip = final_clip.set_audio(audio_clip)
+    # Close all the clips to release resources
+    for clip in clips:
+        clip.close()
 
-    # Get the base filename of the song file without the path
-    song_filename = os.path.basename(song_file)
-
-    # Generate a unique output filename
-    output_filename = get_unique_filename(output_folder, song_filename)
-
-    # Export the final video to the output folder
-    final_clip.write_videofile(output_filename, codec='libx264', audio_codec='aac')
-
-    # Close all the clips after exporting to terminate the FFMPEG process
 if __name__ == "__main__":
-    song_file = r"G:\Python\PROJEKT\SONGS\OHSHIIT160 tag160.mp3"
+    song_file = r"G:\Python\PROJEKT\SONGS\Z KONOPI 187.mp3"
     clips_folder = r"G:\Python\PROJEKT\CLIPS"
     output_folder = r"G:\Python\PROJEKT\OUTPUT"
 

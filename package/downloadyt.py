@@ -1,5 +1,10 @@
-from pytube import YouTube
 import os
+from pytube import YouTube
+import re
+
+def sanitize_filename(filename):
+    # Remove invalid characters from the filename using regular expression
+    return re.sub(r'[<>:"/\\|?*]', '', filename)
 
 def download_videos_from_file(file_path, video_folder):
     if not os.path.exists(video_folder):
@@ -17,17 +22,20 @@ def download_videos_from_file(file_path, video_folder):
     for link in video_links:
         try:
             yt = YouTube(link)
-            video_title = yt.title.replace(" ", "_")
+            video_title = sanitize_filename(yt.title.replace(" ", "_"))
 
             if video_title in existing_video_titles:
                 print(f"Skipping {yt.title}. Video already downloaded.")
                 continue
 
-            video = yt.streams.filter(progressive=True, file_extension='mp4', resolution='1080p').first()
+            # List of desired resolutions in descending order
+            desired_resolutions = ["1080p", "720p", "480p", "360p"]
 
-            # If there is no 1080p stream, fallback to the highest available resolution
-            if not video:
-                video = yt.streams.filter(progressive=True, file_extension='mp4').first()
+            video = None
+            for resolution in desired_resolutions:
+                video = yt.streams.filter(progressive=False, file_extension='mp4', resolution=resolution).first()
+                if video:
+                    break
 
             if video:
                 print(f"Downloading: {yt.title}")
@@ -36,18 +44,42 @@ def download_videos_from_file(file_path, video_folder):
                 print("Download completed successfully.")
             else:
                 print(f"Skipping {yt.title}. Could not find a compatible video stream.")
+
         except Exception as e:
             print(f"Error downloading {link}: {str(e)}")
-
-            # Retry download up to 2 times
-            retries = 2
+            retries = 4
             while retries > 0:
                 retries -= 1
                 print(f"Retrying download {2 - retries} time...")
                 try:
-                    video.download(output_path=video_folder, filename=f"{video_title}.mp4")
-                    print("Download completed successfully.")
-                    break
+                    # Retry the download
+                    yt = YouTube(link)
+                    video_title = sanitize_filename(yt.title.replace(" ", "_"))
+                    # Rest of the code for download attempts...
+
+                    if video_title in existing_video_titles:
+                        print(f"Skipping {yt.title}. Video already downloaded.")
+                        continue
+
+                    # List of desired resolutions in descending order
+                    desired_resolutions = ["1080p", "720p", "480p", "360p"]
+
+                    # Find the first available stream with the desired resolutions
+                    video = None
+                    for resolution in desired_resolutions:
+                        video = yt.streams.filter(progressive=False, file_extension='mp4',
+                                                  resolution=resolution).first()
+                        if video:
+                            break
+
+                    if video:
+                        print(f"Downloading: {yt.title}")
+                        video_file_path = os.path.join(video_folder, f"{video_title}.mp4")
+                        video.download(output_path=video_folder, filename=f"{video_title}.mp4")
+                        print("Download completed successfully.")
+                    else:
+                        print(f"Skipping {yt.title}. Could not find a compatible video stream.")
+
                 except Exception as e:
                     print(f"Error downloading {link}: {str(e)}")
                     if retries == 0:
