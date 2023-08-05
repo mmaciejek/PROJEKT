@@ -10,30 +10,35 @@ def get_unique_filename(output_folder, base_filename):
         num += 1
     return f"{unique_filename}{num}.mp4"
 
-def get_highest_quality_resolution(clips_folder):
-    max_resolution = (0, 0)
-    for video_file in os.listdir(clips_folder):
-        if video_file.endswith('.mp4'):
-            video_path = os.path.join(clips_folder, video_file)
-            clip = VideoFileClip(video_path)
-            resolution = clip.size
-            if resolution[0] * resolution[1] > max_resolution[0] * max_resolution[1]:
-                max_resolution = resolution
-            clip.close()
-    return max_resolution
+def resize_to_1080p(clip):
+    return clip.resize(height=1080)
 
-def make_music_video(song_file, clips_folder, output_folder):
+def make_music_video(song_file, clips_folder, output_folder, bpm):
     video_files = os.listdir(clips_folder)
     random.shuffle(video_files)
 
+    beats_per_minute = bpm
+    beats_per_second = beats_per_minute / 60
+    clip_duration = 2 / beats_per_second
+
     clips = []
-    for video_file in video_files:
+    for idx, video_file in enumerate(video_files):
         video_path = os.path.join(clips_folder, video_file)
         clip = VideoFileClip(video_path)
-        clips.append(clip)
+        original_clip_duration = clip.duration
 
-    # Get the highest resolution from the clips
-    highest_resolution = get_highest_quality_resolution(clips_folder)
+        if idx == 0:
+            adjusted_duration = original_clip_duration - 0.1
+            clip = clip.subclip(0, adjusted_duration)
+        else:
+            # Adjust the duration of each clip to be exactly 2 beats
+            num_beats = original_clip_duration * beats_per_second
+            target_duration = num_beats / beats_per_second
+            clip = clip.subclip(0, target_duration)
+
+        # Resize the clip to 1080p
+        clip = resize_to_1080p(clip)
+        clips.append(clip)
 
     # Concatenate all the clips to create the final video
     final_clip = concatenate_videoclips(clips, method="compose")
@@ -48,9 +53,6 @@ def make_music_video(song_file, clips_folder, output_folder):
     # Crop the final video to match the duration of the audio
     final_clip = final_clip.subclip(0, song_duration)
 
-    # Resize the final video to maintain aspect ratio with the desired height
-    final_clip = final_clip.resize(height=highest_resolution[1])
-
     # Create the output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)
 
@@ -64,6 +66,7 @@ def make_music_video(song_file, clips_folder, output_folder):
     # Close all the clips to release resources
     for clip in clips:
         clip.close()
+
 
 if __name__ == "__main__":
     song_file = r"G:\Python\PROJEKT\SONGS\Z KONOPI 187.mp3"

@@ -2,11 +2,11 @@
 from package.downloadyt import download_videos_from_file
 from package.getsongbpm import get_bpm_from_mp3_name
 import os
-from package.exportclips import export_clips, delete_clips
+from package.exportclips import delete_clips
 from package.makemusicvideo import make_music_video
 import time
 from mutagen.mp3 import MP3
-
+from package.exportclipsfromyt import export_clips
 def main():
     # Download videos from the links in linksyt.txt
     file_path = "G:\\Python\\PROJEKT\\linksyt.txt"
@@ -29,8 +29,11 @@ def main():
             audio = MP3(song_path)
             song_duration = audio.info.length
 
-            export_clips(bpm, video_folder, song_duration)
-            make_music_video(song_path, clips_folder, output_folder)
+            export_clips(bpm, clips_folder,song_duration,video_folder)
+            time.sleep(2)
+
+
+            make_music_video(song_path, clips_folder, output_folder,bpm)
             time.sleep(2)
             delete_clips(clips_folder)
 

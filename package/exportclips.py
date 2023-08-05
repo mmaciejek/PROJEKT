@@ -1,3 +1,5 @@
+
+
 import os
 import random
 
@@ -89,10 +91,12 @@ def export_clips(song_bpm, videos_folder, song_duration):
         # Close the video after exporting all clips from this video to terminate the FFMPEG process
         video.close()
 
+
+
 if __name__ == "__main__":
     # Example usage of export_clips method
-    song_file = r"G:\Python\PROJEKT\SONGS\Z KONOPI 187.mp3"
-    bpm = 156
+    bpm = 30
     videos_folder = "G:\\Python\\PROJEKT\\VIDEOS"
-    song_duration = 180  # In seconds (e.g., 3 minutes)
+    song_duration = 20  # In seconds (e.g., 3 minutes)
     export_clips(bpm, videos_folder, song_duration)
+    print("done exporting clips")
