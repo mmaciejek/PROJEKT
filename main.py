@@ -1,22 +1,31 @@
-# G:\Python\PROJEKT\main.py
-from package.downloadyt import download_videos_from_file
-from package.getsongbpm import get_bpm_from_mp3_name
 import os
-from package.exportclips import delete_clips
-from package.makemusicvideo import make_music_video
 import time
+
 from mutagen.mp3 import MP3
-from package.exportclipsfromyt import export_clips
-def main():
-    # Download videos from the links in linksyt.txt
-    file_path = "G:\\Python\\PROJEKT\\linksyt.txt"
-    video_folder = "G:\\Python\\PROJEKT\\VIDEOS"
-    clips_folder = "G:\\Python\\PROJEKT\\CLIPS"
-    output_folder = r"G:\Python\PROJEKT\OUTPUT"
-    #download_videos_from_file(file_path, video_folder)
+
+from data.download_videos_youtube import download_videos_from_file
+from logic.create_music_video import make_music_video
+from logic.delete_clips import delete_clips
+from logic.export_clips_from_videos import export_clips
+from logic.get_song_bpm import get_bpm_from_mp3_name
+from data.reencoding import reencode_videos
+
+
+def main(clip_length_beats=2):
+
+    file_path = r"C:\Users\chaci\Desktop\PROJEKT\data\info_about_youtube_viedos\links_youtube_videos.txt"
+
+    video_folder = r"C:\Users\chaci\Desktop\PROJEKT\data\input_videos"
+    encoded_videos = r"C:\Users\chaci\Desktop\PROJEKT\data\input_reencoded_videos"
+
+    clips_folder = r"C:\Users\chaci\Desktop\PROJEKT\data\input_clips"
+    output_folder = r"C:\Users\chaci\Desktop\PROJEKT\data\output_music_videos"
+
+    # download_videos_from_file(file_path, video_folder)
+    reencode_videos(video_folder, encoded_videos)
 
     # Get BPM for each song in the SONGS folder
-    songs_folder = "G:\\Python\\PROJEKT\\SONGS"
+    songs_folder = r"C:\Users\chaci\Desktop\PROJEKT\data\input_songs"
     for song_file in os.listdir(songs_folder):
         if song_file.endswith('.mp3'):
             # Get BPM
@@ -29,13 +38,13 @@ def main():
             audio = MP3(song_path)
             song_duration = audio.info.length
 
-            export_clips(bpm, clips_folder,song_duration,video_folder)
+            export_clips(bpm, clips_folder, song_duration, video_folder, clip_length_beats)
             time.sleep(2)
 
-
-            make_music_video(song_path, clips_folder, output_folder,bpm)
+            make_music_video(song_path, clips_folder, output_folder, bpm, clip_length_beats)
             time.sleep(2)
             delete_clips(clips_folder)
 
+
 if __name__ == "__main__":
-    main()
+    main(2)
